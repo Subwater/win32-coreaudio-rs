@@ -1,19 +1,16 @@
-use crate::{
-    bindings::Windows::Win32::{
-        Storage::StructuredStorage::{
-            PROPVARIANT_0_0_0_abi, PROPVARIANT_0_0_abi, PROPVARIANT, PROPVARIANT_0,
-        },
-        System::{
-            OleAutomation::{
-                VARENUM, VT_BOOL, VT_EMPTY, VT_I1, VT_I2, VT_I4, VT_I8, VT_INT, VT_LPWSTR, VT_NULL,
-                VT_R4, VT_R8, VT_UI1, VT_UI2, VT_UI4, VT_UI8, VT_UINT,
-            },
-            PropertiesSystem::{IPropertyStore, PropVariantToStringAlloc, PROPERTYKEY},
-            SystemServices::CHAR,
-        },
+use std::mem::ManuallyDrop;
+
+use windows::Win32::{
+    Foundation::VARIANT_BOOL,
+    System::Com::{
+        StructuredStorage::{PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0},
+        VARENUM, VT_BOOL, VT_EMPTY, VT_I1, VT_I2, VT_I4, VT_I8, VT_INT, VT_LPWSTR, VT_NULL, VT_R4,
+        VT_R8, VT_UI1, VT_UI2, VT_UI4, VT_UI8, VT_UINT,
     },
-    string::WinString,
+    UI::Shell::PropertiesSystem::{IPropertyStore, PropVariantToStringAlloc, PROPERTYKEY},
 };
+
+use crate::string::WinString;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PropertyKey(PROPERTYKEY);
@@ -51,15 +48,16 @@ pub enum Property {
 
 impl Property {
     pub(crate) fn from_raw(raw: PROPVARIANT) -> Self {
+        let raw_raw = raw.clone();
         let raw_inner = unsafe { raw.Anonymous.Anonymous };
-        let tag = VARENUM(raw_inner.vt as _);
-        let value = raw_inner.Anonymous;
+        let tag = raw_inner.vt;
+        let value = &raw_inner.Anonymous;
         if tag == VT_EMPTY {
             Self::Empty
         } else if tag == VT_NULL {
             Self::Null
         } else if tag == VT_I1 {
-            Self::I8(unsafe { value.cVal.0 as _ })
+            Self::I8(unsafe { value.cVal as _ })
         } else if tag == VT_UI1 {
             Self::U8(unsafe { value.bVal })
         } else if tag == VT_I2 {
@@ -83,25 +81,22 @@ impl Property {
         } else if tag == VT_R8 {
             Self::F64(unsafe { value.dblVal })
         } else if tag == VT_BOOL {
-            Self::Bool(unsafe { value.boolVal != 0 })
+            Self::Bool(unsafe { value.boolVal != true })
         } else if tag == VT_LPWSTR {
-            Self::Str(unsafe { WinString::from_com_pwstr(PropVariantToStringAlloc(&raw).unwrap()) })
+            Self::Str(unsafe {
+                WinString::from_com_pwstr(PropVariantToStringAlloc(&raw_raw).unwrap())
+            })
         } else {
             Self::Unsupported
         }
     }
 
     pub(crate) fn to_raw(&self) -> PROPVARIANT {
-        type Data = PROPVARIANT_0_0_0_abi;
+        type Data = PROPVARIANT_0_0_0;
         let (tag, data) = match self {
             Property::Empty => (VT_EMPTY, Data { bVal: 0 }),
             Property::Null => (VT_NULL, Data { bVal: 0 }),
-            Property::I8(x) => (
-                VT_I1,
-                Data {
-                    cVal: CHAR(*x as _),
-                },
-            ),
+            Property::I8(x) => (VT_I1, Data { cVal: *x as _ }),
             Property::U8(x) => (VT_UI1, Data { bVal: *x }),
             Property::I16(x) => (VT_I2, Data { iVal: *x }),
             Property::U16(x) => (VT_UI2, Data { uiVal: *x }),
@@ -111,7 +106,12 @@ impl Property {
             Property::U64(x) => (VT_UI8, Data { uhVal: *x }),
             Property::F32(x) => (VT_R4, Data { fltVal: *x }),
             Property::F64(x) => (VT_R8, Data { dblVal: *x }),
-            Property::Bool(x) => (VT_BOOL, Data { boolVal: *x as _ }),
+            Property::Bool(x) => (
+                VT_BOOL,
+                Data {
+                    boolVal: VARIANT_BOOL::from(*x),
+                },
+            ),
             Property::Str(x) => (
                 VT_LPWSTR,
                 Data {
@@ -122,13 +122,13 @@ impl Property {
         };
         PROPVARIANT {
             Anonymous: PROPVARIANT_0 {
-                Anonymous: PROPVARIANT_0_0_abi {
-                    vt: tag.0 as _,
+                Anonymous: ManuallyDrop::new(PROPVARIANT_0_0 {
+                    vt: tag,
                     wReserved1: 0,
                     wReserved2: 0,
                     wReserved3: 0,
                     Anonymous: data,
-                },
+                }),
             },
         }
     }
@@ -146,27 +146,36 @@ impl PropertyStore {
     }
 
     /// See also: [`IPropertyStore::Commit`](https://docs.microsoft.com/en-us/windows/win32/api/propsys/nf-propsys-ipropertystore-commit)
-    pub fn commit(&self) -> windows::Result<()> {
+    pub fn commit(&self) -> windows::core::Result<()> {
         unsafe { self.inner.Commit() }
     }
 
     /// See also: [`IPropertyStore::GetAt`](https://docs.microsoft.com/en-us/windows/win32/api/propsys/nf-propsys-ipropertystore-getat)
-    pub fn get_at(&self, index: u32) -> windows::Result<PropertyKey> {
-        unsafe { self.inner.GetAt(index).map(PropertyKey::from_raw) }
+    pub fn get_at(&self, index: u32) -> windows::core::Result<PropertyKey> {
+        let pkey: *mut PROPERTYKEY = std::ptr::null_mut();
+
+        unsafe {
+            self.inner.GetAt(index, pkey)?;
+            Ok(PropertyKey::from_raw(*pkey.to_owned()))
+        }
     }
 
     /// See also: [`IPropertyStore::GetCount`](https://docs.microsoft.com/en-us/windows/win32/api/propsys/nf-propsys-ipropertystore-getcount)
-    pub fn get_count(&self) -> windows::Result<u32> {
+    pub fn get_count(&self) -> windows::core::Result<u32> {
         unsafe { self.inner.GetCount() }
     }
 
     /// See also: [`IPropertyStore::GetValue`](https://docs.microsoft.com/en-us/windows/win32/api/propsys/nf-propsys-ipropertystore-getvalue)
-    pub fn get_value(&self, key: &PropertyKey) -> windows::Result<Property> {
-        unsafe { self.inner.GetValue(key.as_raw()).map(Property::from_raw) }
+    pub fn get_value(&self, key: PropertyKey) -> windows::core::Result<Property> {
+        unsafe {
+            self.inner
+                .GetValue(key.as_raw() as _)
+                .map(Property::from_raw)
+        }
     }
 
     /// See also: [`IPropertyStore::SetValue`](https://docs.microsoft.com/en-us/windows/win32/api/propsys/nf-propsys-ipropertystore-setvalue)
-    pub fn set_value(&self, key: &PropertyKey, property: &Property) -> windows::Result<()> {
+    pub fn set_value(&self, key: &PropertyKey, property: &Property) -> windows::core::Result<()> {
         unsafe { self.inner.SetValue(key.as_raw(), &property.to_raw()) }
     }
 }

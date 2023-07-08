@@ -1,9 +1,8 @@
-use windows::Guid;
+use windows::core::GUID;
 
-use crate::{
-    bindings::Windows::Win32::Media::Audio::CoreAudio::ISimpleAudioVolume, util::as_raw_or_null,
-};
+use windows::Win32::Media::Audio::ISimpleAudioVolume;
 
+use crate::util::as_raw_or_null;
 /// See also: [`ISimpleAudioVolume`](https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nn-audioclient-isimpleaudiovolume)
 #[derive(Debug, Clone)]
 pub struct SimpleAudioVolume {
@@ -16,12 +15,12 @@ impl SimpleAudioVolume {
     }
 
     /// See also: [`ISimpleAudioVolume::GetMasterVolume`](https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-isimpleaudiovolume-getmastervolume)
-    pub fn get_master_volume(&self) -> windows::Result<f32> {
+    pub fn get_master_volume(&self) -> windows::core::Result<f32> {
         unsafe { self.inner.GetMasterVolume() }
     }
 
     /// See also: [`ISimpleAudioVolume::GetMute`](https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-isimpleaudiovolume-getmute)
-    pub fn get_mute(&self) -> windows::Result<bool> {
+    pub fn get_mute(&self) -> windows::core::Result<bool> {
         unsafe { self.inner.GetMute().map(Into::into) }
     }
 
@@ -29,8 +28,8 @@ impl SimpleAudioVolume {
     pub fn set_master_volume(
         &self,
         volume_level: f32,
-        event_context: Option<&Guid>,
-    ) -> windows::Result<()> {
+        event_context: Option<&GUID>,
+    ) -> windows::core::Result<()> {
         unsafe {
             self.inner
                 .SetMasterVolume(volume_level, as_raw_or_null(event_context))
@@ -38,7 +37,7 @@ impl SimpleAudioVolume {
     }
 
     /// See also: [`ISimpleAudioVolume::SetMute`](https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-isimpleaudiovolume-setmute)
-    pub fn set_mute(&self, mute: bool, event_context: Option<&Guid>) -> windows::Result<()> {
+    pub fn set_mute(&self, mute: bool, event_context: Option<&GUID>) -> windows::core::Result<()> {
         unsafe { self.inner.SetMute(mute, as_raw_or_null(event_context)) }
     }
 }

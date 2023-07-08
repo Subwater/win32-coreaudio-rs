@@ -1,19 +1,16 @@
 //! Collection of translated bitflag and enumeration types.
 
-use crate::bindings::Windows::Win32::{
-    Media::Audio::CoreAudio::{
-        eAll, eCapture, eCommunications, eConsole, eMultimedia, eRender,
-        AudioSessionDisconnectReason as EAudioSessionDisconnectReason,
-        AudioSessionState as EAudioSessionState, AudioSessionStateActive, AudioSessionStateExpired,
-        AudioSessionStateInactive, DisconnectReasonDeviceRemoval,
-        DisconnectReasonExclusiveModeOverride, DisconnectReasonFormatChanged,
-        DisconnectReasonServerShutdown, DisconnectReasonSessionDisconnected,
-        DisconnectReasonSessionLogoff, EDataFlow, ERole, DEVICE_STATEMASK_ALL, DEVICE_STATE_ACTIVE,
-        DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT, DEVICE_STATE_UNPLUGGED,
-        ENDPOINT_HARDWARE_SUPPORT_METER, ENDPOINT_HARDWARE_SUPPORT_MUTE,
-        ENDPOINT_HARDWARE_SUPPORT_VOLUME,
-    },
-    Storage::StructuredStorage::{STGM_READ, STGM_READWRITE, STGM_WRITE},
+use windows::Win32::Media::Audio::{
+    eAll, eCapture, eCommunications, eConsole, eMultimedia, eRender,
+    AudioSessionDisconnectReason as EAudioSessionDisconnectReason,
+    AudioSessionState as EAudioSessionState, AudioSessionStateActive, AudioSessionStateExpired,
+    AudioSessionStateInactive, DisconnectReasonDeviceRemoval,
+    DisconnectReasonExclusiveModeOverride, DisconnectReasonFormatChanged,
+    DisconnectReasonServerShutdown, DisconnectReasonSessionDisconnected,
+    DisconnectReasonSessionLogoff, EDataFlow, ERole, DEVICE_STATEMASK_ALL, DEVICE_STATE_ACTIVE,
+    DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT, DEVICE_STATE_UNPLUGGED,
+    ENDPOINT_HARDWARE_SUPPORT_METER, ENDPOINT_HARDWARE_SUPPORT_MUTE,
+    ENDPOINT_HARDWARE_SUPPORT_VOLUME,
 };
 
 macro_rules! map_enum {
@@ -89,9 +86,9 @@ map_enum! {
     /// See also: [`STGM Constants`](https://docs.microsoft.com/en-us/windows/win32/stg/stgm-constants)
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum StorageAccessMode: i32 {
-        Read = STGM_READ,
-        Write = STGM_WRITE,
-        ReadWrite = STGM_READWRITE,
+        Read = 0,
+        Write = 1,
+        ReadWrite = 2,
     }
 
     /// See also: [`AudioSessionState`](https://docs.microsoft.com/en-us/windows/win32/api/audiosessiontypes/ne-audiosessiontypes-audiosessionstate)

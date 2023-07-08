@@ -1,7 +1,5 @@
 use std::ops::Deref;
 
-use windows::{Guid, Interface};
-
 use crate::{
     audio_session_control::AudioSessionControl,
     audio_session_enumerator::AudioSessionEnumerator,
@@ -9,13 +7,14 @@ use crate::{
     audio_volume_duck_notification::{
         AudioVolumeDuckNotification, AudioVolumeDuckNotificationWrapper,
     },
-    bindings::Windows::Win32::Media::Audio::CoreAudio::{
-        IAudioSessionManager, IAudioSessionManager2, IAudioSessionNotification,
-        IAudioVolumeDuckNotification,
-    },
     device::Activate,
     simple_audio_volume::SimpleAudioVolume,
     string::WinStr,
+};
+use windows::core::{ComInterface, Interface, GUID};
+use windows::Win32::Media::Audio::{
+    IAudioSessionManager, IAudioSessionManager2, IAudioSessionNotification,
+    IAudioVolumeDuckNotification,
 };
 
 /// See also: [`IAudioSessionManager`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessionmanager)
@@ -36,11 +35,11 @@ impl AudioSessionManager {
     /// See also: [`IAudioSessionManager::GetAudioSessionControl`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessionmanager-getaudiosessioncontrol)
     pub fn get_audio_session_control(
         &self,
-        audio_session_guid: &Guid,
-    ) -> windows::Result<AudioSessionControl> {
+        audio_session_guid: &GUID,
+    ) -> windows::core::Result<AudioSessionControl> {
         unsafe {
             self.inner
-                .GetAudioSessionControl(audio_session_guid, 0)
+                .GetAudioSessionControl(Some(audio_session_guid), 0)
                 .map(AudioSessionControl::new)
         }
     }
@@ -48,16 +47,16 @@ impl AudioSessionManager {
     /// See also: [`IAudioSessionManager::GetSimpleAudioVolume`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessionmanager-getsimpleaudiovolume)
     pub fn get_simple_audio_volume(
         &self,
-        audio_session_guid: &Guid,
-    ) -> windows::Result<SimpleAudioVolume> {
+        audio_session_guid: &GUID,
+    ) -> windows::core::Result<SimpleAudioVolume> {
         unsafe {
             self.inner
-                .GetSimpleAudioVolume(audio_session_guid, 0)
+                .GetSimpleAudioVolume(Some(audio_session_guid), 0)
                 .map(SimpleAudioVolume::new)
         }
     }
 
-    pub fn upgrade(&self) -> windows::Result<AudioSessionManager2> {
+    pub fn upgrade(&self) -> windows::core::Result<AudioSessionManager2> {
         self.inner.cast().map(AudioSessionManager2::from_raw)
     }
 }
@@ -80,7 +79,7 @@ impl Activate for AudioSessionManager2 {
 
 impl AudioSessionManager2 {
     /// See also: [`IAudioSessionManager2::GetSessionEnumerator`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessionmanager2-getsessionenumerator)
-    pub fn get_session_enumerator(&self) -> windows::Result<AudioSessionEnumerator> {
+    pub fn get_session_enumerator(&self) -> windows::core::Result<AudioSessionEnumerator> {
         unsafe {
             self.inner
                 .GetSessionEnumerator()
@@ -93,7 +92,7 @@ impl AudioSessionManager2 {
         &self,
         session_id: &WinStr,
         duck_notification: T,
-    ) -> windows::Result<AudioVolumeDuckNotificationHandle>
+    ) -> windows::core::Result<AudioVolumeDuckNotificationHandle>
     where
         T: AudioVolumeDuckNotification,
     {
@@ -102,7 +101,7 @@ impl AudioSessionManager2 {
         );
         unsafe {
             self.inner
-                .RegisterDuckNotification(session_id.as_pwstr(), &duck_notification)?
+                .RegisterDuckNotification(session_id.as_pcwstr(), &duck_notification)?
         };
         Ok(AudioVolumeDuckNotificationHandle {
             inner: duck_notification,
@@ -114,7 +113,7 @@ impl AudioSessionManager2 {
     pub fn register_session_notification<T>(
         &self,
         session_notification: T,
-    ) -> windows::Result<AudioSessionNotificationHandle>
+    ) -> windows::core::Result<AudioSessionNotificationHandle>
     where
         T: AudioSessionNotification,
     {

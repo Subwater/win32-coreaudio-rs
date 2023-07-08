@@ -1,8 +1,8 @@
 use std::{iter::FusedIterator, ops::Range};
 
-use crate::{
-    bindings::Windows::Win32::Media::Audio::CoreAudio::IMMDeviceCollection, device::Device,
-};
+use windows::Win32::Media::Audio::IMMDeviceCollection;
+
+use crate::device::Device;
 
 /// See also: [`IMMDeviceCollection`](https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nn-mmdeviceapi-immdevicecollection)
 #[derive(Debug, Clone)]
@@ -15,11 +15,11 @@ impl DeviceCollection {
         Self { inner }
     }
 
-    pub fn get_count(&self) -> windows::Result<u32> {
+    pub fn get_count(&self) -> windows::core::Result<u32> {
         unsafe { self.inner.GetCount() }
     }
 
-    pub fn item(&self, device: u32) -> windows::Result<Device> {
+    pub fn item(&self, device: u32) -> windows::core::Result<Device> {
         unsafe { self.inner.Item(device).map(Device::new) }
     }
 }

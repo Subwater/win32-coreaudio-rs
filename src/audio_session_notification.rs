@@ -1,17 +1,22 @@
 use crate::audio_session_control::AudioSessionControl;
-use crate::bindings::Windows::Win32::Media::Audio::CoreAudio::IAudioSessionControl;
-use crate::bindings::*;
+use windows::core::implement;
+use windows::Win32::Media::Audio::IAudioSessionControl;
+use windows::Win32::Media::Audio::IAudioSessionNotification;
+use windows::Win32::Media::Audio::IAudioSessionNotification_Impl;
 
 /// See also: [`IAudioSessionNotification`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessionnotification)
 pub trait AudioSessionNotification: 'static {
     /// See also: [`IAudioSessionNotification::OnSessionCreated`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessionnotification-onsessioncreated)
-    fn on_session_created(&mut self, new_session: AudioSessionControl) -> windows::Result<()> {
+    fn on_session_created(
+        &self,
+        new_session: AudioSessionControl,
+    ) -> windows::core::Result<()> {
         let _ = new_session;
         Ok(())
     }
 }
 
-#[windows::implement(Windows::Win32::Media::Audio::CoreAudio::IAudioSessionNotification)]
+#[implement(IAudioSessionNotification)]
 pub(crate) struct AudioSessionNotificationWrapper {
     inner: Box<dyn AudioSessionNotification>,
 }
@@ -29,12 +34,12 @@ impl AudioSessionNotificationWrapper {
 
 // impl IAudioSessionNotification
 #[allow(non_snake_case)]
-impl AudioSessionNotificationWrapper {
+impl IAudioSessionNotification_Impl for AudioSessionNotificationWrapper {
     fn OnSessionCreated(
-        &mut self,
-        new_session: &Option<IAudioSessionControl>,
-    ) -> windows::Result<()> {
+        &self,
+        new_session: Option<&IAudioSessionControl>,
+    ) -> windows::core::Result<()> {
         self.inner
-            .on_session_created(AudioSessionControl::new(new_session.clone().unwrap()))
+            .on_session_created(AudioSessionControl::new(new_session.unwrap().to_owned()))
     }
 }

@@ -8,12 +8,19 @@ use std::fmt::{Formatter, Write};
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
-use crate::bindings::Windows::Win32::{
-    Foundation::PWSTR,
-    Globalization::lstrlenW,
-    System::{Com::CoTaskMemFree, Memory::LocalFree},
-    UI::Shell::StrDupW,
-};
+use windows::core::CopyType;
+use windows::core::IntoParam;
+use windows::core::{PCWSTR, PWSTR};
+use windows::Win32::Foundation::HLOCAL;
+use windows::Win32::System::Com::CoTaskMemFree;
+use windows::Win32::System::Memory::LocalFree;
+
+
+// impl IntoParam<PCWSTR, CopyType> for PWSTR {
+//     fn into_param(self) -> windows::core::Param<PCWSTR> {
+//         todo!()
+//     }
+// }
 
 /// A borrowed string value that is valid only for the defined lifetime.
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -29,8 +36,14 @@ impl WinStr {
     ///
     /// - `pwstr` must point to a valid, null-terminated string.
     pub(crate) unsafe fn from_pwstr<'a>(pwstr: &'a PWSTR) -> &'a Self {
-        let len = unsafe { lstrlenW(pwstr).try_into().expect("invalid string length") };
-        let slice = unsafe { std::slice::from_raw_parts(pwstr.0 as *const u16, len) };
+        let len = unsafe { pwstr.to_string().unwrap().chars().count() };
+        let slice = unsafe { std::slice::from_raw_parts(pwstr.0 as *const u16, 2) };
+        unsafe { &*(slice as *const [u16] as *const Self) }
+    }
+
+	pub(crate) unsafe fn from_pcwstr<'a>(pcwstr: &'a PCWSTR) -> &'a Self {
+        let len = unsafe { pcwstr.to_string().unwrap().chars().count() };
+        let slice = unsafe { std::slice::from_raw_parts(pcwstr.0 as *const u16, 2) };
         unsafe { &*(slice as *const [u16] as *const Self) }
     }
 
@@ -44,6 +57,18 @@ impl WinStr {
     /// The PWSTR pointer should not be used to mutate the string.
     pub(crate) fn as_pwstr(&self) -> PWSTR {
         PWSTR(self.slice.as_ptr() as *mut _)
+    }
+
+	/// Gets a PWSTR pointer to the underlying string.
+    ///
+    /// # Safety
+    ///
+    /// This pointer will be valid as long as the parent `WinStr` object is
+    /// kept alive.
+    ///
+    /// The PWSTR pointer should not be used to mutate the string.
+    pub(crate) fn as_pcwstr(&self) -> PCWSTR {
+        PCWSTR(self.slice.as_ptr() as *mut _)
     }
 
     pub fn len(&self) -> usize {
@@ -65,7 +90,7 @@ impl WinStr {
     }
 
     pub fn to_winstring(&self) -> WinString {
-        let pwstr = unsafe { StrDupW(self.as_pwstr()) };
+        let pwstr = unsafe { self.as_pwstr() };
         if pwstr.is_null() {
             panic!("unable to copy string");
         }
@@ -234,10 +259,10 @@ impl Drop for WinString {
     fn drop(&mut self) {
         match &self.alloc {
             StringAlloc::Com => unsafe {
-                CoTaskMemFree(self.as_pwstr().0 as _);
+                CoTaskMemFree(Some(self.as_pwstr().0 as _));
             },
             StringAlloc::Local => unsafe {
-                LocalFree(self.as_pwstr().0 as _);
+                LocalFree(HLOCAL(self.as_pwstr().0 as _));
             },
         }
     }

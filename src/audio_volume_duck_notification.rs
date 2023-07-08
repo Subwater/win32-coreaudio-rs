@@ -1,28 +1,29 @@
-use crate::bindings::Windows::Win32::Foundation::PWSTR;
-use crate::bindings::*;
-
 use crate::string::WinStr;
+use windows::core::{implement, PCWSTR, PWSTR};
+use windows::Win32::Media::Audio::{
+    IAudioVolumeDuckNotification, IAudioVolumeDuckNotification_Impl,
+};
 
 /// See also: [`IAudioVolumeDuckNotification`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiovolumeducknotification)
 pub trait AudioVolumeDuckNotification: 'static {
     /// See also: [`IAudioVolumeDuckNotification::OnVolumeDuckNotification`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiovolumeducknotification-onvolumeducknotification)
     fn on_volume_duck_notification(
-        &mut self,
+        &self,
         session_id: &WinStr,
         num_communication_sessions: u32,
-    ) -> windows::Result<()> {
+    ) -> windows::core::Result<()> {
         let _ = (session_id, num_communication_sessions);
         Ok(())
     }
 
     /// See also: [`IAudioVolumeDuckNotification::OnVolumeUnduckNotification`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiovolumeducknotification-onvolumeunducknotification)
-    fn on_volume_unduck_notification(&mut self, session_id: &WinStr) -> windows::Result<()> {
+    fn on_volume_unduck_notification(&self, session_id: &WinStr) -> windows::core::Result<()> {
         let _ = session_id;
         Ok(())
     }
 }
 
-#[windows::implement(Windows::Win32::Media::Audio::CoreAudio::IAudioVolumeDuckNotification)]
+#[implement(IAudioVolumeDuckNotification)]
 pub(crate) struct AudioVolumeDuckNotificationWrapper {
     inner: Box<dyn AudioVolumeDuckNotification>,
 }
@@ -40,20 +41,20 @@ impl AudioVolumeDuckNotificationWrapper {
 
 // impl IAudioVolumeDuckNotification
 #[allow(non_snake_case)]
-impl AudioVolumeDuckNotificationWrapper {
+impl IAudioVolumeDuckNotification_Impl for AudioVolumeDuckNotificationWrapper {
     fn OnVolumeDuckNotification(
-        &mut self,
-        session_id: PWSTR,
+        &self,
+        session_id: &PCWSTR,
         num_communication_sessions: u32,
-    ) -> windows::Result<()> {
+    ) -> windows::core::Result<()> {
         self.inner.on_volume_duck_notification(
-            unsafe { WinStr::from_pwstr(&session_id) },
+            unsafe { WinStr::from_pcwstr(&session_id) },
             num_communication_sessions,
         )
     }
 
-    fn OnVolumeUnduckNotification(&mut self, session_id: PWSTR) -> windows::Result<()> {
+    fn OnVolumeUnduckNotification(&self, session_id: &PCWSTR) -> windows::core::Result<()> {
         self.inner
-            .on_volume_unduck_notification(unsafe { WinStr::from_pwstr(&session_id) })
+            .on_volume_unduck_notification(unsafe { WinStr::from_pcwstr(&session_id) })
     }
 }

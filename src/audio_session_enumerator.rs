@@ -1,8 +1,9 @@
 use std::{iter::FusedIterator, ops::Range};
 
+use windows::Win32::Media::Audio::IAudioSessionEnumerator;
+
 use crate::{
     audio_session_control::AudioSessionControl,
-    bindings::Windows::Win32::Media::Audio::CoreAudio::IAudioSessionEnumerator,
 };
 
 /// See also: [`IAudioSessionEnumerator`](https://docs.microsoft.com/en-us/windows/desktop/api/audiopolicy/nn-audiopolicy-iaudiosessionenumerator)
@@ -16,11 +17,11 @@ impl AudioSessionEnumerator {
         Self { inner }
     }
 
-    pub fn get_count(&self) -> windows::Result<i32> {
+    pub fn get_count(&self) -> windows::core::Result<i32> {
         unsafe { self.inner.GetCount() }
     }
 
-    pub fn get_session(&self, session: i32) -> windows::Result<AudioSessionControl> {
+    pub fn get_session(&self, session: i32) -> windows::core::Result<AudioSessionControl> {
         unsafe { self.inner.GetSession(session).map(AudioSessionControl::new) }
     }
 }

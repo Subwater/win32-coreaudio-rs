@@ -1,11 +1,5 @@
 #![warn(unsafe_op_in_unsafe_fn)]
 
-mod bindings {
-    #![allow(unsafe_op_in_unsafe_fn)]
-
-    windows::include_bindings!();
-}
-
 mod audio_endpoint_volume;
 mod audio_endpoint_volume_callback;
 mod audio_session_control;
@@ -48,8 +42,8 @@ pub use self::{
     simple_audio_volume::SimpleAudioVolume,
 };
 
-use crate::bindings::Windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 use std::sync::Once;
+use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 
 /// Make sure this is called at every static entrypoint to this crate.
 pub(crate) fn ensure_thread_init() {
@@ -57,8 +51,6 @@ pub(crate) fn ensure_thread_init() {
         static INIT_ONCE: Once = Once::new();
     }
     INIT_ONCE.with(|init_once| {
-        init_once.call_once(|| unsafe {
-            CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED).unwrap()
-        })
+        init_once.call_once(|| unsafe { CoInitializeEx(None, COINIT_MULTITHREADED).unwrap() })
     })
 }
