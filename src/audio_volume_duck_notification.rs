@@ -1,5 +1,5 @@
 use crate::string::WinStr;
-use windows::core::{implement, PCWSTR, PWSTR};
+use windows::core::{implement, PCWSTR};
 use windows::Win32::Media::Audio::{
     IAudioVolumeDuckNotification, IAudioVolumeDuckNotification_Impl,
 };
@@ -48,13 +48,13 @@ impl IAudioVolumeDuckNotification_Impl for AudioVolumeDuckNotificationWrapper {
         num_communication_sessions: u32,
     ) -> windows::core::Result<()> {
         self.inner.on_volume_duck_notification(
-            unsafe { WinStr::from_pcwstr(&session_id) },
+            unsafe { WinStr::from_pcwstr(session_id) },
             num_communication_sessions,
         )
     }
 
     fn OnVolumeUnduckNotification(&self, session_id: &PCWSTR) -> windows::core::Result<()> {
         self.inner
-            .on_volume_unduck_notification(unsafe { WinStr::from_pcwstr(&session_id) })
+            .on_volume_unduck_notification(unsafe { WinStr::from_pcwstr(session_id) })
     }
 }

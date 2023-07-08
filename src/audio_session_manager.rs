@@ -11,7 +11,7 @@ use crate::{
     simple_audio_volume::SimpleAudioVolume,
     string::WinStr,
 };
-use windows::core::{ComInterface, Interface, GUID};
+use windows::core::{ComInterface, GUID};
 use windows::Win32::Media::Audio::{
     IAudioSessionManager, IAudioSessionManager2, IAudioSessionNotification,
     IAudioVolumeDuckNotification,

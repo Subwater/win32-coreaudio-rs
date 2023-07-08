@@ -87,7 +87,7 @@ impl IMMNotificationClient_Impl for NotificationClientWrapper {
 
     fn OnDeviceAdded(&self, device_id: &PCWSTR) -> windows::core::Result<()> {
         self.inner
-            .on_device_added(unsafe { WinStr::from_pcwstr(&device_id) })
+            .on_device_added(unsafe { WinStr::from_pcwstr(device_id) })
     }
 
     fn OnDeviceRemoved(&self, device_id: &PCWSTR) -> windows::core::Result<()> {
@@ -101,7 +101,7 @@ impl IMMNotificationClient_Impl for NotificationClientWrapper {
         new_state: u32,
     ) -> windows::core::Result<()> {
         self.inner.on_device_state_changed(
-            unsafe { WinStr::from_pcwstr(&device_id) },
+            unsafe { WinStr::from_pcwstr(device_id) },
             DeviceState::from_raw(new_state),
         )
     }
@@ -112,7 +112,7 @@ impl IMMNotificationClient_Impl for NotificationClientWrapper {
         key: &PROPERTYKEY,
     ) -> windows::core::Result<()> {
         self.inner.on_property_value_changed(
-            unsafe { WinStr::from_pcwstr(&device_id) },
+            unsafe { WinStr::from_pcwstr(device_id) },
             PropertyKey::from_raw(key.to_owned()),
         )
     }

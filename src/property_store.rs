@@ -4,8 +4,8 @@ use windows::Win32::{
     Foundation::VARIANT_BOOL,
     System::Com::{
         StructuredStorage::{PROPVARIANT, PROPVARIANT_0, PROPVARIANT_0_0, PROPVARIANT_0_0_0},
-        VARENUM, VT_BOOL, VT_EMPTY, VT_I1, VT_I2, VT_I4, VT_I8, VT_INT, VT_LPWSTR, VT_NULL, VT_R4,
-        VT_R8, VT_UI1, VT_UI2, VT_UI4, VT_UI8, VT_UINT,
+        VT_BOOL, VT_EMPTY, VT_I1, VT_I2, VT_I4, VT_I8, VT_INT, VT_LPWSTR, VT_NULL, VT_R4, VT_R8,
+        VT_UI1, VT_UI2, VT_UI4, VT_UI8, VT_UINT,
     },
     UI::Shell::PropertiesSystem::{IPropertyStore, PropVariantToStringAlloc, PROPERTYKEY},
 };

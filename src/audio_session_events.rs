@@ -9,7 +9,7 @@ use windows::{
     Win32::Media::Audio::{IAudioSessionEvents, IAudioSessionEvents_Impl},
 };
 use windows::{
-    core::{implement, GUID, PWSTR},
+    core::{implement, GUID},
     Win32::Foundation::BOOL,
 };
 

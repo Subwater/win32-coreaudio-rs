@@ -2,19 +2,16 @@
 
 use std::borrow::Borrow;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
-use std::convert::TryInto;
+
 use std::fmt::{self, Debug};
 use std::fmt::{Formatter, Write};
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
-use windows::core::CopyType;
-use windows::core::IntoParam;
 use windows::core::{PCWSTR, PWSTR};
 use windows::Win32::Foundation::HLOCAL;
 use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::System::Memory::LocalFree;
-
 
 // impl IntoParam<PCWSTR, CopyType> for PWSTR {
 //     fn into_param(self) -> windows::core::Param<PCWSTR> {
@@ -36,13 +33,13 @@ impl WinStr {
     ///
     /// - `pwstr` must point to a valid, null-terminated string.
     pub(crate) unsafe fn from_pwstr<'a>(pwstr: &'a PWSTR) -> &'a Self {
-        let len = unsafe { pwstr.to_string().unwrap().chars().count() };
+        let _len = unsafe { pwstr.to_string().unwrap().chars().count() };
         let slice = unsafe { std::slice::from_raw_parts(pwstr.0 as *const u16, 2) };
         unsafe { &*(slice as *const [u16] as *const Self) }
     }
 
-	pub(crate) unsafe fn from_pcwstr<'a>(pcwstr: &'a PCWSTR) -> &'a Self {
-        let len = unsafe { pcwstr.to_string().unwrap().chars().count() };
+    pub(crate) unsafe fn from_pcwstr<'a>(pcwstr: &'a PCWSTR) -> &'a Self {
+        let _len = unsafe { pcwstr.to_string().unwrap().chars().count() };
         let slice = unsafe { std::slice::from_raw_parts(pcwstr.0 as *const u16, 2) };
         unsafe { &*(slice as *const [u16] as *const Self) }
     }
@@ -59,7 +56,7 @@ impl WinStr {
         PWSTR(self.slice.as_ptr() as *mut _)
     }
 
-	/// Gets a PWSTR pointer to the underlying string.
+    /// Gets a PWSTR pointer to the underlying string.
     ///
     /// # Safety
     ///
@@ -90,7 +87,7 @@ impl WinStr {
     }
 
     pub fn to_winstring(&self) -> WinString {
-        let pwstr = unsafe { self.as_pwstr() };
+        let pwstr = self.as_pwstr();
         if pwstr.is_null() {
             panic!("unable to copy string");
         }
@@ -262,7 +259,7 @@ impl Drop for WinString {
                 CoTaskMemFree(Some(self.as_pwstr().0 as _));
             },
             StringAlloc::Local => unsafe {
-                LocalFree(HLOCAL(self.as_pwstr().0 as _));
+                LocalFree(HLOCAL(self.as_pwstr().0 as _)).unwrap();
             },
         }
     }

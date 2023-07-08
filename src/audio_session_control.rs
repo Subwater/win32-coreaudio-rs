@@ -6,15 +6,12 @@ use crate::{
     SimpleAudioVolume,
 };
 use std::ops::Deref;
-use windows::core::CopyType;
-use windows::core::IntoParam;
-use windows::core::{ComInterface, PCWSTR, PWSTR};
+
+use windows::core::ComInterface;
 use windows::{
     core::GUID,
     Win32::Media::Audio::{IAudioSessionControl, IAudioSessionControl2, IAudioSessionEvents},
 };
-
-
 
 /// See also: [`IAudioSessionControl`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessioncontrol)
 #[derive(Debug, Clone)]

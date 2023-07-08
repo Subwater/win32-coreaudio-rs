@@ -1,4 +1,7 @@
-use windows::Win32::{System::Com::{CoCreateInstance, CLSCTX_ALL}, Media::Audio::{MMDeviceEnumerator, IMMDeviceEnumerator, IMMNotificationClient}};
+use windows::Win32::{
+    Media::Audio::{IMMDeviceEnumerator, IMMNotificationClient, MMDeviceEnumerator},
+    System::Com::{CoCreateInstance, CLSCTX_ALL},
+};
 
 use crate::{
     bits::{DataFlow, DataFlowMask, DeviceRole, DeviceStateMask},

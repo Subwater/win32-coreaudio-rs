@@ -7,10 +7,7 @@ use windows::Win32::Media::Audio::IAudioSessionNotification_Impl;
 /// See also: [`IAudioSessionNotification`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessionnotification)
 pub trait AudioSessionNotification: 'static {
     /// See also: [`IAudioSessionNotification::OnSessionCreated`](https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nf-audiopolicy-iaudiosessionnotification-onsessioncreated)
-    fn on_session_created(
-        &self,
-        new_session: AudioSessionControl,
-    ) -> windows::core::Result<()> {
+    fn on_session_created(&self, new_session: AudioSessionControl) -> windows::core::Result<()> {
         let _ = new_session;
         Ok(())
     }

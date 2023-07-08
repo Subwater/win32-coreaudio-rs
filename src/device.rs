@@ -7,10 +7,9 @@ use crate::{
     AudioSessionManager2,
 };
 use windows::Win32::{
-    Devices::{Properties::{
-        DEVPKEY_DeviceInterface_FriendlyName, DEVPKEY_Device_DeviceDesc,
-        DEVPKEY_Device_FriendlyName,
-    }, FunctionDiscovery::{PKEY_DeviceInterface_FriendlyName, PKEY_Device_DeviceDesc, PKEY_Device_FriendlyName}},
+    Devices::FunctionDiscovery::{
+        PKEY_DeviceInterface_FriendlyName, PKEY_Device_DeviceDesc, PKEY_Device_FriendlyName,
+    },
     Media::Audio::IMMDevice,
     System::Com::{StructuredStorage::PROPVARIANT, CLSCTX_ALL, STGM},
 };
@@ -30,7 +29,7 @@ impl Device {
     where
         T: Activate,
     {
-        let mut raw = None;
+        let raw = None;
         unsafe {
             self.inner.Activate::<T::Raw>(CLSCTX_ALL, Some(params))?;
         }
