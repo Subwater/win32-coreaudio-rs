@@ -9,9 +9,8 @@ use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 
 use windows::core::{PCWSTR, PWSTR};
-use windows::Win32::Foundation::HLOCAL;
+use windows::Win32::Foundation::{LocalFree, HLOCAL};
 use windows::Win32::System::Com::CoTaskMemFree;
-use windows::Win32::System::Memory::LocalFree;
 
 // impl IntoParam<PCWSTR, CopyType> for PWSTR {
 //     fn into_param(self) -> windows::core::Param<PCWSTR> {

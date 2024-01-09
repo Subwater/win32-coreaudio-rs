@@ -2,9 +2,7 @@ use std::{iter::FusedIterator, ops::Range};
 
 use windows::Win32::Media::Audio::IAudioSessionEnumerator;
 
-use crate::{
-    audio_session_control::AudioSessionControl,
-};
+use crate::audio_session_control::AudioSessionControl;
 
 /// See also: [`IAudioSessionEnumerator`](https://docs.microsoft.com/en-us/windows/desktop/api/audiopolicy/nn-audiopolicy-iaudiosessionenumerator)
 #[derive(Debug, Clone)]
